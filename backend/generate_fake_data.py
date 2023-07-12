@@ -8,10 +8,10 @@ fake = faker.Faker()
 data = []
 id_set = set()
 
-for id in range(100000):
+for id in range(500000):
     # Generate a unique ID
     while True:
-        id_ = fake.random_int(min=1, max=110000)
+        id_ = fake.random_int(min=1, max=2000000)
         if id_ not in id_set:
             id_set.add(id_)
             break

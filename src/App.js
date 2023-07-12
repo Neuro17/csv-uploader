@@ -11,6 +11,7 @@ function App() {
   const [finalResult, setfinalResult] = useState(null);
   const [loaderValue, setLoaderValue] = useState(null);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [loaderType, setLoaderType] = useState(null);
 
   const handleFileSelect = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -22,6 +23,8 @@ function App() {
       formData.append('file', selectedFile);
 
       setLoaderValue(1)
+      setUploadResult({})
+      setLoaderType('indeterminate')
       axios.post('http://localhost:8888/upload', formData)
         .then((response) => {
           console.log(response.data);
@@ -36,7 +39,7 @@ function App() {
         .catch((error) => {
           console.error(error);
         });
-    }
+      }
   };
 
   const startPolling = () => {
@@ -44,6 +47,7 @@ function App() {
     let taskID;
     if(storedResult) {
       taskID = JSON.parse(storedResult)['task_id'];
+      setLoaderType('buffer')
     }
     const intervalId = setInterval(() => {
       axios
@@ -52,7 +56,10 @@ function App() {
           const isCompleted = response.data['data'][3]
           const totalRows = response.data['data'][2]
           const processedRows = response.data['data'][4] + response.data['data'][5]
-          setLoaderValue(parseInt(processedRows / totalRows * 100))
+          const value = parseInt(processedRows / totalRows * 100)
+          if(value > 1) {
+            setLoaderValue(value)
+          }
           console.log(response.data)
           if(isCompleted) {
             clearInterval(intervalId);
@@ -68,7 +75,7 @@ function App() {
         .catch((error) => {
           console.error(error);
         });
-    }, 2000); // Polling interval set to 2 seconds (adjust as needed)
+    }, 1000); // Polling interval set to 1 second (adjust as needed)
   
     return () => {
       clearInterval(intervalId); // Cleanup the interval on component unmount
@@ -101,7 +108,7 @@ function App() {
       <Button variant="contained" onClick={handleFileUpload} disabled={uploadResult !== null}>
         Upload
       </Button>
-      {uploadResult && <LinearProgress value={loaderValue} variant='determinate'/> }
+      {uploadResult && <LinearProgress value={loaderValue} variant={loaderType} valueBuffer={loaderValue + 10}/> }
       { uploadComplete && 
         <>
           <p>Records created: {finalResult['data'][4]}</p>

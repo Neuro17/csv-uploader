@@ -20,32 +20,38 @@ async def upload_csv(ctx, file_content, task_id):
     print(f'task_id is: {task_id}')
 
     for i, row in enumerate(csv_reader):
+        id_ = row[0]
+        product_name = row[1]
+        price = row[2]
+
+        if not product_name or not price:
+            print('found malformed row')
+            rows_with_errors.append(','.join(row))
+            continue
         try:
-            id_ = row[0]
-            product_name = row[1]
-            price = row[2]
+            float(price)
+        except Exception as e:
+            print(e)
+            print('found malformed row')
+            rows_with_errors.append(','.join(row))
+            continue
 
-            if not product_name or not price:
-                print('found malformed row')
-                rows_with_errors.append(','.join(row))
-                continue
+        if not id_:
+            print('ID not found, generating one')
+            last_id += 1
+            id_ = last_id
+            created_rows +=1
+        else:
+            udpated_rows += 1
+            last_id = max(last_id, int(id_))
 
-            if not id_:
-                print('ID not found, generating one')
-                last_id += 1
-                id_ = last_id
-                print(id_, last_id)
-                created_rows +=1
-            else:
-                udpated_rows += 1
-                last_id = max(last_id, int(id_))
-
-            
-            new_product = {
-                'id': id_,
-                'name': product_name,
-                'price': float(price)
-            }
+        
+        new_product = {
+            'id': id_,
+            'name': product_name,
+            'price': float(price)
+        }
+        try:
             insert_product(new_product)
         except Exception as e:
             print(e)

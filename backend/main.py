@@ -41,6 +41,7 @@ async def upload_csv(file: UploadFile):
     file_data = await file.read()
     file_data = file_data.decode("utf-8")
     num_rows = len(file_data.split('\n'))
+
     # Pass the file data to the worker without writing it to disk
     task_id = insert_task({'name': file.filename, 'total_rows': num_rows})
     await pool.enqueue_job("upload_csv", file_data, task_id)
@@ -53,7 +54,6 @@ async def get_data():
 
 @app.get("/status/{id}")
 async def get_data(id: int):
-    print(id)
     task_info = get_task_info(id)
     return {'data': task_info}
 
@@ -66,5 +66,4 @@ async def test():
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8888, log_level="info")
