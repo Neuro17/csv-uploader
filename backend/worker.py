@@ -16,11 +16,6 @@ async def upload_csv(ctx, file_content, task_id):
     created_rows = 0
     rows_with_errors = []
     last_id = get_last_id() or 0
-    print(last_id)
-
-    # TODO:   aggiungere che id può non esserci e quindi va creato
-    #         aggiungere gestione missing columns, malformed data
-    #         aggiungere store info task per andare in polling
 
     print(f'task_id is: {task_id}')
 
@@ -29,6 +24,11 @@ async def upload_csv(ctx, file_content, task_id):
             id_ = row[0]
             product_name = row[1]
             price = row[2]
+
+            if not product_name or not price:
+                print('found malformed row')
+                rows_with_errors.append(','.join(row))
+                continue
 
             if not id_:
                 print('ID not found, generating one')
@@ -44,22 +44,21 @@ async def upload_csv(ctx, file_content, task_id):
             new_product = {
                 'id': id_,
                 'name': product_name,
-                'price': price
+                'price': float(price)
             }
             insert_product(new_product)
         except Exception as e:
             print(e)
-            rows_with_errors.append(row)
-        # print(f'ID: {id_}, Product Name: {product_name}, Price: {price}')
+            rows_with_errors.append(','.join(row))
 
         if i % 25 == 0:
-            print('update')
+            print('updating task info')
             task_info = dict(
                 id=task_id,
                 records_updated=udpated_rows,
                 records_created=created_rows,
                 is_completed=False,
-                # rows_with_errors='|'.join(rows_with_errors)
+                rows_with_errors='|'.join(rows_with_errors)
             )
             update_task(task_info)
     
@@ -69,7 +68,7 @@ async def upload_csv(ctx, file_content, task_id):
         records_updated=udpated_rows,
         records_created=created_rows,
         is_completed=True,
-        # rows_with_errors='|'.join(rows_with_errors)
+        rows_with_errors='|'.join(rows_with_errors)
     )
     update_task(task_info)
 

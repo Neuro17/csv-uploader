@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Container, Typography, LinearProgress } from '@mui/material';
+import { 
+  Button, Container, Typography, LinearProgress, Table, TableRow, 
+  TableContainer, Paper, TableBody, TableCell, TableHead 
+} from '@mui/material';
 import axios from 'axios';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadResult, setUploadResult] = useState(null);
+  const [finalResult, setfinalResult] = useState(null);
   const [loaderValue, setLoaderValue] = useState(null);
+  const [uploadComplete, setUploadComplete] = useState(false);
 
   const handleFileSelect = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -22,6 +27,7 @@ function App() {
           console.log(response.data);
           localStorage.setItem('uploadTask', JSON.stringify(response.data));
           setUploadResult(response.data);
+          setUploadComplete(false);
           const cleanupPolling = startPolling();
           return () => {
             cleanupPolling(); // Cleanup the polling on component unmount
@@ -52,6 +58,8 @@ function App() {
             clearInterval(intervalId);
             localStorage.removeItem('uploadTask');
             setUploadResult(null)
+            setUploadComplete(true)
+            setfinalResult(response.data)
           } else {
             setUploadResult(response.data);
           }
@@ -60,7 +68,7 @@ function App() {
         .catch((error) => {
           console.error(error);
         });
-    }, 1000); // Polling interval set to 5 seconds (adjust as needed)
+    }, 2000); // Polling interval set to 2 seconds (adjust as needed)
   
     return () => {
       clearInterval(intervalId); // Cleanup the interval on component unmount
@@ -94,6 +102,25 @@ function App() {
         Upload
       </Button>
       {uploadResult && <LinearProgress value={loaderValue} variant='determinate'/> }
+      { uploadComplete && 
+        <>
+          <p>Records created: {finalResult['data'][4]}</p>
+          <p>Records updated: {finalResult['data'][5]}</p>
+          <p>Found the following malformed rows:</p>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableCell>ID</TableCell>
+                <TableCell>Nane</TableCell>
+                <TableCell>Price</TableCell>
+              </TableHead>
+              <TableBody>
+                {finalResult['data']['6'].split('|').map(r => <TableRow>{r.split(',').map(c => <TableCell>{c}</TableCell>)}</TableRow>)}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      }
     </Container>
   );
 }

@@ -76,11 +76,13 @@ def update_task(task_data):
             UPDATE tasks
             SET is_completed = ?,
                 records_created = ?,
-                records_updated = ?
+                records_updated = ?,
+                rows_with_errors = ?
             WHERE id = ?
         ''', (
             task_data['is_completed'],
             task_data['records_created'],
             task_data['records_updated'],
+            task_data['rows_with_errors'],
             task_data['id'],
         ))
