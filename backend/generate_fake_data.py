@@ -8,17 +8,26 @@ fake = faker.Faker()
 data = []
 id_set = set()
 
-for _ in range(50000):
+for id in range(100000):
     # Generate a unique ID
     while True:
-        id_ = fake.random_int(min=1, max=100000)
+        id_ = fake.random_int(min=1, max=110000)
         if id_ not in id_set:
             id_set.add(id_)
             break
 
     # Generate product name and price
     name = fake.random_element(elements=('Food', 'Beverage')) + ' ' + fake.word()
+
     price = round(random.uniform(1, 100), 2)
+    
+    if id_ in [13, 63, 5434, 8289, 444]:
+        price = 'string instead of number'
+    if id_ in [234, 2134, 3939]:
+        price = ''
+    if id_ in [9993, 12]:
+        name = ''
+
 
     # Add the row to the data list
     data.append((id_, name, price))
